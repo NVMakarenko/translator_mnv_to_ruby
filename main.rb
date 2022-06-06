@@ -52,7 +52,7 @@ def nextChar()
   sourceCode.find[numChar]
 end
 
-
+###
 ### lexan()
 def lexan()
   for (numChar)<code.length do
