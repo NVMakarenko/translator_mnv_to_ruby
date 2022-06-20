@@ -1,7 +1,1 @@
-program tablesOfLanguageTokensbegin
-    v := 5
-    ;
-    abc
-    write: v;
-    ::>
-end
+program var := (5 + 1) * 3.5 end
