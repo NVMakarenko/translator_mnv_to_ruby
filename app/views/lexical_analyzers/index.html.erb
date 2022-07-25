@@ -1,0 +1,35 @@
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <h1><%= t('form.todo') %></h1>
+    </div>
+    <div class="col">
+      <h1><%= t('form.lexan') %></h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <%= render "form", lexical_analyzer: @lexical_analyzer%>
+    </div>
+    <div class="col">
+      <p><%= @lexical_analyzer.progtext %></p>
+
+      <table>
+        <tr>
+        <th>N</th>
+         <th>lexem type</th>
+         <th>lexema</th>
+       </tr>
+
+        <% @worddiv.each do |char| %>
+       <tr>
+            <td><span class="mycount"></span></td>
+            <td><%=getId(char)%></td>
+            <td><%=char%></td>
+
+      </tr>
+      <%end %>
+      </table>
+    </div>
+  </div>
+</div>

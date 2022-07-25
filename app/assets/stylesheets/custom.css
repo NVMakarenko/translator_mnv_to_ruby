@@ -1,0 +1,19 @@
+body {
+    text-align: center;
+    counter-reset: mycount;           /* Set the counter to 0 */
+}
+table{
+  width: 90%;
+}
+.mycount:before{
+    counter-increment: mycount;      /* Increment the counter */
+    content: counter(mycount) ". "; /* Display the counter */
+}
+.col {
+  text-align: center;
+}
+
+.right_col {
+  text-align: right;
+  width: 200px;
+}

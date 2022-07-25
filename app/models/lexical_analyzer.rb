@@ -1,0 +1,2 @@
+class LexicalAnalyzer < ApplicationRecord
+end
