@@ -16,17 +16,20 @@
 
       <table>
         <tr>
-        <th>N</th>
+         <th>N</th>
+         <th>Program line</th>
          <th>lexem type</th>
          <th>lexema</th>
+         <th>index in proper table</th>
        </tr>
-
-        <% @worddiv.each do |char| %>
+        <% @worddiv.each do |item| %>
        <tr>
             <td><span class="mycount"></span></td>
-            <td><%=getId(char)%></td>
-            <td><%=char%></td>
-
+            <td><%=get_n_line(item)%></td>
+            <td><%=get_id(item)%></td>
+            <td><%=item%></td>
+            <td><%=get_idx_id(item)%>
+            <%=get_idx_math(item)%></td>
       </tr>
       <%end %>
       </table>

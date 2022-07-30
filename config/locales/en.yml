@@ -6,4 +6,6 @@ en:
     edit: "Edit"
     destroy: "Destroy"
   error:
-    103: 'Error 103: invalid value'
+    102: 'Error 102: invalid combination of symbols'
+    103: 'Error 103: invalid symbol'
+    104: 'Error 104: invalid value'
