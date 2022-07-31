@@ -13,7 +13,7 @@
     </div>
     <div class="col">
       <p><%= @lexical_analyzer.progtext %></p>
-
+      <%result=get_lexan(@worddiv)%>
       <table>
         <tr>
          <th>N</th>
@@ -22,14 +22,13 @@
          <th>lexema</th>
          <th>index in proper table</th>
        </tr>
-        <% @worddiv.each do |item| %>
+        <% result.each do |item| %>
        <tr>
             <td><span class="mycount"></span></td>
-            <td><%=get_n_line(item)%></td>
-            <td><%=get_id(item)%></td>
-            <td><%=item%></td>
-            <td><%=get_idx_id(item)%>
-            <%=get_idx_math(item)%></td>
+            <td><%=item[:num_line]%></td>
+            <td><%=item[:lexem_type]%></td>
+            <td><%=item[:lexema]%></td>
+            <td><%=item[:idx]%></td>
       </tr>
       <%end %>
       </table>

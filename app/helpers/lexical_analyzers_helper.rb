@@ -66,4 +66,20 @@ module LexicalAnalyzersHelper
     else 'identificator'
     end
   end
+
+  def get_lexan(worddiv)
+  hash_token ={}
+  array_lexem = []
+  worddiv.each do |item|
+    hash_token[:num_line]=get_n_line(item)
+    hash_token[:lexem_type] = get_id(item)
+    hash_token[:lexema] = item
+    hash_token[:idx] = get_idx_id(item) if hash_token[:lexem_type]=='identificator'
+    hash_token[:idx] = get_idx_math(item) if hash_token[:lexem_type]=='real' || hash_token[:lexem_type]=='integer'
+    array_lexem.push(hash_token)
+    hash_token=Hash.new
+  end
+  return array_lexem
+  end
+
 end
