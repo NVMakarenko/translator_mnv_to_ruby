@@ -1,10 +1,11 @@
+<%lexan=get_lexan(@worddiv)%>
 <div class="container">
   <div class="row">
     <div class="col">
       <h1><%= t('form.todo') %></h1>
     </div>
     <div class="col">
-      <h1><%= t('form.lexan') %></h1>
+      <h1><%= t('form.parser') %></h1>
     </div>
   </div>
   <div class="row">
@@ -12,8 +13,23 @@
       <%= render "form", lexical_analyzer: @lexical_analyzer%>
     </div>
     <div class="col">
+  <%= start=parser_start(lexan)%><br>
+  <% if start==t('syntax.start.success')%>
+    <%= name=parser_name(lexan)%>
+    <% if name!=t('syntax.name.fail')%><br>
+      <%=parse_assign(lexan)%><br>
+      <%=parse_if(lexan)%><br>
+      <%=parse_for(lexan)%><br>
+    <%end%>
+  <%end%>
+
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <h1><%= t('form.lexan') %></h1>
       <p><%= @lexical_analyzer.progtext %></p>
-      <%result=get_lexan(@worddiv)%>
+
       <table>
         <tr>
          <th>N</th>
@@ -22,7 +38,7 @@
          <th>lexema</th>
          <th>index in proper table</th>
        </tr>
-        <% result.each do |item| %>
+        <% lexan.each do |item| %>
        <tr>
             <td><span class="mycount"></span></td>
             <td><%=item[:num_line]%></td>

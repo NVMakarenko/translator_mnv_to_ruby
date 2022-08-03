@@ -2,6 +2,32 @@ en:
   form:
     todo: "Write a program on your language"
     lexan: "Lexical analyse results"
+    parser: "Syntax analyse results"
+  syntax:
+    start:
+      success: "Program starts with keyword \"program\" and ends with keyword \"end\""
+      fail_first: "Program has wrong syntax. Program should start with keyword \"program\""
+      fail_last: "Program has wrong syntax. Program should end with keyword \"end\""
+    name:
+      success: "The name of program is"
+      fail: "Error. Program should have a name"
+    assign:
+      success: "Assigning is correct"
+      fail_expression: "Error. After assigning should be expression, not keyword. Check line:"
+      fail: "Error. Before assigning should be identificator. Check line:"
+    if:
+      success: "if-goto construction is correct."
+      fail_expression: "Error. After \"if\" should be expression, not keyword. Check line:"
+      fail_goto: "Error. If-goto construction should ends with \"goto\". Check line: "
+      fail_label: "Error. After goto should be label with lexem type\"integer\". Check line: "
+      fail_start: "Error. if-goto construction should start with \"if\". Check line: "
+      fail: "Error. Wrong \"if\" syntax. Check line: "
+    for:
+      success: "for-to-do construction is correct."
+      fail_end: "Error. for-to-do construction should finish with \"end\". Check line: "
+      fail_start: "Error. for-to-do construction should start with \"for\". Check line: "
+      fail: "Error. Wrong \"for\" syntax. Check line: "
+    end: "Syntax analyse is finished"
   button:
     edit: "Edit"
     destroy: "Destroy"
