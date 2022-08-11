@@ -13,15 +13,8 @@
       <%= render "form", lexical_analyzer: @lexical_analyzer%>
     </div>
     <div class="col">
-  <%= start=parser_start(lexan)%><br>
-  <% if start==t('syntax.start.success')%>
-    <%= name=parser_name(lexan)%>
-    <% if name!=t('syntax.name.fail')%><br>
-      <%=parse_assign(lexan)%><br>
-      <%=parse_if(lexan)%><br>
-      <%=parse_for(lexan)%><br>
-    <%end%>
-  <%end%>
+  <%= parser(lexan)%><br>
+
 
     </div>
   </div>

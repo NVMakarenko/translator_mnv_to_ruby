@@ -44,7 +44,7 @@ module LexicalAnalyzersHelper
     elsif (hook.first=='Digit' && hook.include?('dot')&& hook.exclude?('Letter')&& hook.exclude?('Math')&& hook.exclude?('Log')) then 'real'
     elsif (hook.first=='Digit' && hook.exclude?('dot') && hook.exclude?('Letter')&& hook.exclude?('Math') && hook.exclude?('Log')) then 'integer'
     elsif (hook.first=='Digit' && hook.include?('dot')&& hook.include?('Letter')) then t('error.102')
-    elsif hook.include?('dot') || hook.include?('Math') then get_lexem_type(char) #assign, order, etc
+    elsif hook.include?('dot') || hook.include?('Math') || hook.include?('Log') then get_lexem_type(char) #assign, order, etc
     elsif hook.include?('other') then  t('error.103')
     else t('error.104')
     end
@@ -83,112 +83,142 @@ module LexicalAnalyzersHelper
   return array_lexem
   end
 ################### SYNTAX ANALYSE ####################################
-  def parser_start(lexan)
-    if lexan.first[:lexem_type]=='keyword' && lexan.first[:lexema]=='program' && lexan.last[:lexem_type]=='keyword'&&lexan.last[:lexema]=='end'
-      t('syntax.start.success')
-    elsif lexan.first[:lexem_type]!='keyword' && lexan.last[:lexem_type]=='keyword'&&lexan.last[:lexema]=='end'
-      t('syntax.start.fail_first')
-    elsif lexan.first[:lexem_type]=='keyword' && lexan.first[:lexema]=='program'&& lexan.last[:lexem_type]!='keyword'
-      t('syntax.start.fail_last')
-    elsif lexan.first[:lexem_type]=='keyword' && lexan.first[:lexema]!='program' && lexan.last[:lexem_type]=='keyword'&&lexan.last[:lexema]=='end'
-      t('syntax.start.fail_first')
-    elsif lexan.first[:lexem_type]=='keyword' && lexan.first[:lexema]=='program' && lexan.last[:lexem_type]=='keyword'&&lexan.last[:lexema]!='end'
-      t('syntax.start.fail_last')
-    end
-  end
 
-  def parser_name(lexan)
-    if parser_start(lexan)==t('syntax.start.success')&&lexan[1][:lexem_type]=='identificator'
-      t('syntax.name.success')+"\"#{lexan[1][:lexema]}\""
+def parser(lexan)
+  if lexan.first[:lexem_type]=='keyword' && lexan.first[:lexema]=='program' && lexan.last[:lexem_type]=='keyword'&&lexan.last[:lexema]=='end'
+    return parser_name(lexan)
+  elsif lexan.first[:lexem_type]!='keyword' && lexan.last[:lexem_type]=='keyword'&&lexan.last[:lexema]=='end'
+    return t('syntax.start.fail_first')
+  elsif lexan.first[:lexem_type]=='keyword' && lexan.first[:lexema]=='program'&& lexan.last[:lexem_type]!='keyword'
+    return t('syntax.start.fail_last')
+  elsif lexan.first[:lexem_type]=='keyword' && lexan.first[:lexema]!='program' && lexan.last[:lexem_type]=='keyword'&&lexan.last[:lexema]=='end'
+    return t('syntax.start.fail_first')
+  else lexan.first[:lexem_type]=='keyword' && lexan.first[:lexema]=='program' && lexan.last[:lexem_type]=='keyword'&&lexan.last[:lexema]!='end'
+    return t('syntax.start.fail_last')
+  end
+end
+
+def parser_name(lexan)
+  lexan=lexan.drop(1)
+  program_name=lexan.first[:lexema]
+  if lexan.first[:lexem_type]=='identificator'
+    return parse_statement_list(lexan)
+  else
+    t('syntax.start.success')+t('syntax.name.fail')
+  end
+end
+
+def parse_statement_list(lexan)
+  string= Array.new
+  string_for=Array.new
+  lexan=lexan.drop(1)
+  lexan.pop
+  i=1
+  l=lexan.last[:num_line]
+  while i<l do
+    string=lexan.select {|v| v[:num_line]==i}
+    string=string.drop(1) if string.first[:lexema]==';'
+    if string.first[:lexem_type]=='idenеtificator'
+      parser_assign(string)
+    elsif string.first[:lexema]=='if'
+      parser_if(string)
+    elsif string.first[:lexema]=='for'
+      string_for=string
     else
-      t('syntax.name.fail')
+      t('syntax.statemen_list.fail')+"#{i}"
     end
+    i+=1
   end
+   parser_expression_for(string_for)
+  return t('syntax.statemen_list.success')
+end
 
-  def parse_assign(lexan)
-    assign_lines=Array.new
-    ident_array=Array.new
-    assign_array=Array.new
-    lexan_without_name=lexan.drop(2)
-### select hashes with assign
-    assign_array=lexan_without_name.select {|v| v[:lexem_type]=='assign'}
-### get number lines with assigning
-    lexan_without_name.each do |hash|
-      assign_lines.push(hash[:num_line]) if hash[:lexem_type]=='assign'
-    end
-### check syntax
-    assign_lines.each do |assign_line|
-      arr=lexan_without_name.select {|v| v[:num_line]==assign_line}
-      arr=arr.drop(1) if arr.first[:lexem_type]=='new_line'
-      return t('syntax.assign.fail')+"#{arr.first[:num_line]}" if arr.first[:lexem_type]!='identificator'
-      return t('syntax.assign.fail')+"#{arr.first[:num_line]}" if arr[1][:lexem_type]!='assign'
-      i=2
-      while i<arr.length
-        return t('syntax.assign.fail_expression')+"#{arr.first[:num_line]}" if arr[i][:lexem_type]=='keyword'
-          ###### todo parse expression
-        i+=1
-      end
-    end
-    return t('syntax.assign.success')
+def parser_assign(string)
+  string=string.drop(1)
+  if string.first[:lexem_type]=='assign'
+    parser_expression(string)
+  else
+    return t('syntax.assign.fail')+"#{string.first[:num_line]}"
   end
+  t('syntax.expression.success')
+end
 
-  def parse_if(lexan)
-    if_lines=Array.new
-    goto_lines=Array.new
-    lexan_without_name=lexan.drop(2)
-### get number lines with if and goto
-    lexan_without_name.each do |hash|
-      if_lines.push(hash[:num_line]) if hash[:lexema]=='if'
-      goto_lines.push(hash[:num_line]) if hash[:lexema]=='goto'
-    end
-### check if_goto construction
-    i=0
-    while i<if_lines.length do
-       return t('syntax.if.fail')+"#{if_lines[i]}" if if_lines!=goto_lines
-       i+=1
-     end
-### check label as last symbol, goto as integer
-     if_lines.each do |if_line|
-       arr=lexan_without_name.select {|v| v[:num_line]==if_line}
-       arr=arr.drop(1) if arr.first[:lexem_type]=='new_line'
-       return t('syntax.if.fail_start')+"#{if_line}" if arr.first[:lexema]!='if'
-       return t('syntax.if.fail_label')+"#{if_line}" if arr.last[:lexem_type]!='integer'
-       return t('syntax.if.fail_goto')+"#{if_line}" if arr[arr.length-2][:lexema]!='goto'
-       i=1
-       while i<arr.length-2
-         return t('syntax.if.fail_expression')+"#{arr.first[:num_line]}" if arr[i][:lexem_type]=='keyword'
-           ###### todo parse expression
-         i+=1
-       end
-     end
-    return t('syntax.if.success')
-  end
-  def parse_for(lexan)
-    for_lines=Array.new
-    to_lines=Array.new
-    do_lines=Array.new
-    lexan_without_name=lexan.drop(2)
-### get number lines with for, to do
-    lexan_without_name.each do |hash|
-      for_lines.push(hash[:num_line]) if hash[:lexema]=='for'
-      to_lines.push(hash[:num_line]) if hash[:lexema]=='to'
-      do_lines.push(hash[:num_line]) if hash[:lexema]=='do'
-    end
-### check for_to_do construction
-    i=0
-    while i<for_lines.length do
-       return t('syntax.for.fail')+"#{for_lines[i]}" if for_lines!=to_lines
-       return t('syntax.for.fail')+"#{for_lines[i]}" if to_lines!=do_lines
-       i+=1
-     end
- ### check end as last symbol, goto as integer
-      for_lines.each do |for_line|
-        arr=lexan_without_name.select {|v| v[:num_line]==for_line}
-        arr=arr.drop(1) if arr.first[:lexem_type]=='new_line'
-        return t('syntax.for.fail_start')+"#{for_line}" if arr.first[:lexema]!='for'
-        return t('syntax.for.fail_end')+"#{for_line}" if arr.last[:lexema]!='end'
+def parser_expression(string)
+  string=string.drop(1)
+  string_term=Array.new
+  count_begin=0
+  count_end=0
 
-      end
-     return t('syntax.for.success')
+  string.each do |item|
+    count_begin+=1 if item[:lexema]=='('
+    count_end+=1 if item[:lexema]==')'
   end
+  return t('syntax.expression.fail_bracket') if count_begin != count_end
+  i=0
+  l=string.length
+  while i<l do
+    if string[i][:lexem_type]=='log_op'
+      return t('syntax.expression.fail_sign')+"#{string[i][:num_line]}"
+    elsif string[i][:lexem_type]!='add_op'
+      string_term.push(string[i])
+    else
+      parser_term(string_term)
+      string_term=Array.new
+    end
+      i+=1
+  end
+end
+
+
+def parser_term(string)
+  i=0
+  l=string.length
+  while i<l do
+    if string[i][:lexem_type]!='math_op'
+      parser_factor(string[i])
+    else
+      return t('syntax.expression.fail')+"#{string[i][:num_line]}"
+    end
+    i+=1
+  end
+end
+
+def parser_factor(lexema)
+  return true if lexema[:lexem_type]=='identificator'
+  return true if lexema[:lexem_type]=='real'
+  return true if lexema[:lexem_type]=='integer'
+  return true if lexema[:lexem_type]=='order_opp'
+end
+
+def parser_if(string)
+  string=string.drop(1)
+  l=string.length
+  i=0
+  return t('syntax.if.fail_label')+"#{string.last[:num_line]}" unless string.last[:lexem_type]=='integer' && string[l-2][:lexema]=='goto'
+  while i<=string.length-3 do
+    parser_expression_if(string[i])
+    i+=1
+  end
+  return t('syntax.if.success')
+end
+
+def parser_expression_if(lexema)
+  return true if lexema[:lexem_type]=='identificator'
+  return true if lexema[:lexem_type]=='log_op'
+  return true if lexema[:lexem_type]=='bollean'
+end
+
+def parser_expression_for(string)
+  i=7
+  l=string.length
+  string_for=Array.new
+  return t('syntax.for.fail_brecket')+"#{string.first[:num_line]}" if string.last[:lexema]!='end'
+  return t('syntax.for.fail_todo')+"#{string.first[:num_line]}" if string[1][:lexem_type]!='identificator'||string[2][:lexem_type]!='assign'||
+  string[3][:lexem_type]!='integer'||string[4][:lexema]!='to'||string[5][:lexem_type]!='integer'||string[6][:lexema]!='do'
+  while i<l do
+    string_for.push(string[i])
+    i+=1
+  end
+  parser_assign(string_for)
+end
 end
