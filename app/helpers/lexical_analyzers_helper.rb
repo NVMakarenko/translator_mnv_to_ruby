@@ -102,7 +102,7 @@ def parser_name(lexan)
   lexan=lexan.drop(1)
   program_name=lexan.first[:lexema]
   if lexan.first[:lexem_type]=='identificator'
-    return parse_statement_list(lexan)
+    parse_statement_list(lexan)
   else
     t('syntax.start.success')+t('syntax.name.fail')
   end
@@ -110,7 +110,6 @@ end
 
 def parse_statement_list(lexan)
   string= Array.new
-  string_for=Array.new
   lexan=lexan.drop(1)
   lexan.pop
   i=1
@@ -123,13 +122,12 @@ def parse_statement_list(lexan)
     elsif string.first[:lexema]=='if'
       parser_if(string)
     elsif string.first[:lexema]=='for'
-      string_for=string
+      parser_expression_for(string)
     else
       t('syntax.statemen_list.fail')+"#{i}"
     end
     i+=1
   end
-   parser_expression_for(string_for)
   return t('syntax.statemen_list.success')
 end
 
