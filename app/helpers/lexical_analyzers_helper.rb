@@ -110,15 +110,16 @@ end
 
 def parse_statement_list(lexan)
   string= Array.new
-  lexan=lexan.drop(1)
+  lexan=lexan.drop(2)
   lexan.pop
   i=1
   l=lexan.last[:num_line]
   while i<l do
     string=lexan.select {|v| v[:num_line]==i}
     string=string.drop(1) if string.first[:lexema]==';'
-    if string.first[:lexem_type]=='idenеtificator'
+    if string.first[:lexem_type]=='identificator'
       parser_assign(string)
+      return poliz(string)
     elsif string.first[:lexema]=='if'
       parser_if(string)
     elsif string.first[:lexema]=='for'
@@ -146,7 +147,6 @@ def parser_expression(string)
   string_term=Array.new
   count_begin=0
   count_end=0
-
   string.each do |item|
     count_begin+=1 if item[:lexema]=='('
     count_end+=1 if item[:lexema]==')'
@@ -219,4 +219,55 @@ def parser_expression_for(string)
   end
   parser_assign(string_for)
 end
+#######################RPN##################
+  def poliz(string)
+    stack=Array.new
+    rpn= Array.new
+    string_poliz = string.drop(2)
+    i=0
+    j=0
+    while i<string_poliz.length do
+      # if string_poliz[i][:lexema]=='('
+      #   stack.push(string_poliz[i])
+      #   j+=1
+      #   next
+      # elsif string_poliz[i][:lexema]==')'
+      #   while stack.length!=0 do
+      #     if stack.last[:lexema]!='('
+      #       rpn.push(stack.last)
+      #       stack.pop
+      #     else
+      #       stack=Array.new
+      #     end
+      #   end
+      if string_poliz[i][:lexem_type]=='identificator'||string_poliz[i][:lexem_type]=='integer'||string_poliz[i][:lexem_type]=='real'
+        rpn.push(string_poliz[i])
+      elsif string_poliz[i][:lexem_type]=='math_op'
+        if j!=0 && stack[j-1][:lexem_type]=='math_op'
+          rpn.push(stack[j-1])
+          stack.pop
+          stack.push(string_poliz[i])
+        else
+          stack.push(string_poliz[i])
+          j+=1
+        end
+      elsif string_poliz[i][:lexem_type]=='add_op'
+        if j!=0 && stack[j-1][:lexem_type]=='math_op'
+          rpn.push(stack[j-1])
+          stack.pop
+          stack.push(string_poliz[i])
+          j+=1
+        else
+          stack.push(string_poliz[i])
+          j+=1
+        end
+      end
+      i+=1
+    end
+    while stack.length!=0 do
+      rpn.push(stack.last)
+      stack.pop
+    end
+    return rpn
+  end
 end
