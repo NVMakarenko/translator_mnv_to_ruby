@@ -2,6 +2,7 @@ en:
   form:
     todo: "Write a program on your language"
     lexan: "Lexical analyse results"
+    rpn: "Reverse Polish Notation"
     parser: "Syntax analyse results"
   syntax:
     start:
@@ -12,7 +13,7 @@ en:
       success: "\nThe name of program is"
       fail: "\nError. Program should have a name"
     statemen_list:
-      success: "Syntax analyse finished successfully."
+      success: " Syntax analyse is finished."
       fail: "String in statement list should start with keyword \"for\", \"if\" or identification. Check line: "
     assign:
       success: "Assigning is correct"

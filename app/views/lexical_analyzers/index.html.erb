@@ -5,7 +5,7 @@
       <h1><%= t('form.todo') %></h1>
     </div>
     <div class="col">
-      <h1><%= t('form.parser') %></h1>
+      <h1><%= t('form.rpn') %></h1>
     </div>
   </div>
   <div class="row">
@@ -13,9 +13,8 @@
       <%= render "form", lexical_analyzer: @lexical_analyzer%>
     </div>
     <div class="col">
-  <%= parse_statement_list(lexan)%><br>
-
-
+      <%string=lexan.select {|v| v[:num_line]==1}%>
+      <%= poliz(string.drop(2))%><br>
     </div>
   </div>
   <div class="row">
@@ -41,6 +40,12 @@
       </tr>
       <%end %>
       </table>
+    </div>
+  </div>
+  <div class="row">
+    <h1><%= t('form.parser') %></h1>
+    <div class="col">
+      <%= parse_statement_list(lexan)%><br>
     </div>
   </div>
 </div>
