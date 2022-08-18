@@ -120,12 +120,13 @@ def parse_statement_list(lexan)
     if string.first[:lexem_type]=='identificator'
       result = parser_assign(string)
       poliz(string)
+      calc_poliz(string.drop(1))
     elsif string.first[:lexema]=='if'
       result = parser_if(string)
     elsif string.first[:lexema]=='for'
       result = parser_expression_for(string)
     else
-      t('syntax.statemen_list.fail')+"#{i}"
+      return t('syntax.statemen_list.fail')+"#{i}"
     end
     i+=1
   end
@@ -211,7 +212,7 @@ def parser_expression_for(string)
   l=string.length
   string_for=Array.new
   return t('syntax.for.fail_brecket')+"#{string.first[:num_line]}" if string.last[:lexema]!='end'
-  return t('syntax.for.fail_todo')+"#{string.first[:num_line]}" if string[1][:lexem_type]!='identificator'||string[2][:lexem_type]!='assign'||
+  return t('syntax.for.fail_todo')+"#{string.first[:num_line]}" if string[1][:lexem_type]!='identificator'||string[2][:lexema]!='='||
   string[3][:lexem_type]!='integer'||string[4][:lexema]!='to'||string[5][:lexem_type]!='integer'||string[6][:lexema]!='do'
   while i<l do
     string_for.push(string[i])
@@ -233,7 +234,7 @@ end
     end
     expression_bracket=expression_bracket.drop(1)
     order=poliz_exp(expression_bracket,0)
-    poliz_exp(exp_main, order)
+    return poliz_exp(exp_main, order)
   end
 
 
@@ -248,24 +249,24 @@ end
           rpn.push(bracket_exp)
         end
       elsif string_poliz[i][:lexem_type]=='identificator'||string_poliz[i][:lexem_type]=='integer'||string_poliz[i][:lexem_type]=='real'
-        rpn.push(string_poliz[i][:lexema])
+        rpn.push(string_poliz[i])
       elsif string_poliz[i][:lexem_type]=='math_op'
-        if j!=0 && stack[j-1][:lexem_type]=='math_op'
-          rpn.push(stack[j-1][:lexema])
+        if j!=0 && stack[j-1]!=nil && stack[j-1][:lexem_type]=='math_op'
+          rpn.push(stack[j-1])
           stack.pop
-          stack.push(string_poliz[i][:lexema])
+          stack.push(string_poliz[i])
         else
-          stack.push(string_poliz[i][:lexema])
+          stack.push(string_poliz[i])
           j+=1
         end
       elsif string_poliz[i][:lexem_type]=='add_op'
-        if j!=0 && stack[j-1][:lexem_type]=='math_op'
-          rpn.push(stack[j-1][:lexema])
+        if j!=0 && stack[j-1]!=nil && stack[j-1][:lexem_type]=='math_op'
+          rpn.push(stack[j-1])
           stack.pop
-          stack.push(string_poliz[i][:lexema])
+          stack.push(string_poliz[i])
           j+=1
         else
-          stack.push(string_poliz[i][:lexema])
+          stack.push(string_poliz[i])
           j+=1
         end
       end
@@ -278,5 +279,36 @@ end
     rpn.each do |item|
       item
     end
+  end
+  ######################## CALCULATING RPN ################################
+  def calc_poliz(rpn)
+    stack=Array.new
+    rpn.each do |item|
+      if item[:lexem_type]=="identificator"||item[:lexem_type]=="integer"||item[:lexem_type]=="real"
+        stack.push(item[:lexema].to_i)
+      elsif item[:lexema]=="+"
+        right_operand=stack.pop
+        left_operand=stack.pop
+        stack.push(right_operand+left_operand)
+      elsif item[:lexema]=="*"
+        right_operand=stack.pop
+        left_operand=stack.pop
+        stack.push(right_operand*left_operand)
+      elsif item[:lexema]=="/"
+        right_operand=stack.pop
+        leftt_operand=stack.pop
+        stack.push(left_operand/right_operand.to_f)
+      elsif item[:lexema]=="-"
+        right_operand=stack.pop
+        left_operand=stack.pop
+        stack.push(left_operand-right_operand)
+      elsif item[:lexema]=="^"
+        right_operand=stack.pop
+        left_operand=stack.pop
+        stack.push(left_operand**right_operand)
+    else return t('poliz.fail')
+      end
+    end
+    return stack.pop
   end
 end

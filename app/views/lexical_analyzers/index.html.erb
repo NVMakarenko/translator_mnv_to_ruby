@@ -3,21 +3,26 @@
   <div class="row">
     <div class="col">
       <h1><%= t('form.todo') %></h1>
+        <%= render "form", lexical_analyzer: @lexical_analyzer%>
+      <div>
+        <h1><%= t('form.parser') %></h1>
+        <div>
+          <%= parse_statement_list(lexan)%><br>
+        </div>
+        <%string=lexan.drop(3)%>
+        <%if string.first[:lexem_type]=='assign'%>
+          <h1><%= t('form.rpn') %></h1>
+          <%string=lexan.select {|v| v[:num_line]==1}%>
+          <% rpn=poliz(string.drop(1))%>
+          <% rpn.each do |operand|%>
+            <%= operand[:lexema]%>
+          <%end%>
+          <h3><%= t('form.result') %></h3>
+          <%= calc_poliz(rpn)%><br>
+        <%end%>
+      </div>
     </div>
-    <div class="col">
-      <h1><%= t('form.rpn') %></h1>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col">
-      <%= render "form", lexical_analyzer: @lexical_analyzer%>
-    </div>
-    <div class="col">
-      <%string=lexan.select {|v| v[:num_line]==1}%>
-      <%= poliz(string.drop(2))%><br>
-    </div>
-  </div>
-  <div class="row">
+
     <div class="col">
       <h1><%= t('form.lexan') %></h1>
       <p><%= @lexical_analyzer.progtext %></p>
@@ -40,12 +45,6 @@
       </tr>
       <%end %>
       </table>
-    </div>
-  </div>
-  <div class="row">
-    <h1><%= t('form.parser') %></h1>
-    <div class="col">
-      <%= parse_statement_list(lexan)%><br>
     </div>
   </div>
 </div>
