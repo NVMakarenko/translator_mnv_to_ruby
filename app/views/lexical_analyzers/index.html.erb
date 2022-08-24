@@ -7,7 +7,7 @@
       <div>
         <h1><%= t('form.parser') %></h1>
         <div>
-          <%= parse_statement_list(lexan)%><br>
+          <%= parser(lexan)%><br>
         </div>
         <%string=lexan.drop(3)%>
         <%if string.first[:lexem_type]=='assign'%>

@@ -26,7 +26,7 @@ module LexicalAnalyzersHelper
 
   def get_idx_id(char)
     result=get_id(char)
-    @idx_ident+=1 if (result=='identificator')
+    @idx_ident+=1 if result=='identificator'
   end
 
   def get_idx_math(char)
@@ -39,12 +39,12 @@ module LexicalAnalyzersHelper
     char.split('').each do |item|
       hook.push(class_of_char(item))
     end
-    if (hook.first=='Letter'&& (hook.include?('Math') ||  hook.include?('Log'))) then t('error.102')
-    elsif (hook.first=='Letter') then get_lexem_type(char)
+    if (hook.first=='Letter'&& (hook.include?('Math') ||  hook.include?('Log') ||  hook.include?('dot'))) then t('error.102')
+    elsif hook.first=='Letter' then get_lexem_type(char)
     elsif (hook.first=='Digit' && hook.include?('dot')&& hook.exclude?('Letter')&& hook.exclude?('Math')&& hook.exclude?('Log')) then 'real'
     elsif (hook.first=='Digit' && hook.exclude?('dot') && hook.exclude?('Letter')&& hook.exclude?('Math') && hook.exclude?('Log')) then 'integer'
     elsif (hook.first=='Digit' && hook.include?('dot')&& hook.include?('Letter')) then t('error.102')
-    elsif hook.include?('dot') || hook.include?('Math') || hook.include?('Log') then get_lexem_type(char) #assign, order, etc
+    elsif (hook.first=='dot' && hook.exclude?('Letter')) || hook.include?('Math') || hook.include?('Log') then get_lexem_type(char) #assign, order, etc
     elsif hook.include?('other') then  t('error.103')
     else t('error.104')
     end
@@ -52,7 +52,7 @@ module LexicalAnalyzersHelper
 
   def get_lexem_type(lexem)
     tokenHash = {
-      'keyword' => ['program', 'begin', 'end', 'for', 'to', 'do', 'if', 'goto'],
+      'keyword' => ['program', 'end', 'for', 'to', 'do', 'if', 'goto'],
       'add_op' => ['+','-'],
       'math_op' => ['*','/','^'],
       "log_op" => ['<','<=','>','>=','~', '='],
@@ -62,8 +62,10 @@ module LexicalAnalyzersHelper
       'new_line' => [';']
     }
     find_token = tokenHash.find {|key, values| values.include?(lexem)}
-    if find_token !=nil
+    if find_token != nil
       find_token.first
+    elsif lexem.first=='.'
+      'real'
     else 'identificator'
     end
   end
@@ -82,6 +84,7 @@ module LexicalAnalyzersHelper
   end
   return array_lexem
   end
+
 ################### SYNTAX ANALYSE ####################################
 
 def parser(lexan)
@@ -110,7 +113,7 @@ end
 
 def parse_statement_list(lexan)
   string= Array.new
-  lexan=lexan.drop(2)
+  lexan=lexan.drop(1)
   lexan.pop
   i=1
   l=lexan.last[:num_line]
@@ -135,12 +138,11 @@ end
 
 def parser_assign(string)
   string=string.drop(1)
-  if string.first[:lexem_type]=='assign'
-    parser_expression(string)
+  if string.first!=nil && string.first[:lexem_type]=='assign' && (string[1][:lexema]=='(' || string[1][:lexem_type]=='integer'||string[1][:lexem_type]=='real'||string[1][:lexem_type]=='identificator')
+    return parser_expression(string)
   else
     return t('syntax.assign.fail')+"#{string.first[:num_line]}"
   end
-  t('syntax.expression.success')
 end
 
 def parser_expression(string)
@@ -152,7 +154,7 @@ def parser_expression(string)
     count_begin+=1 if item[:lexema]=='('
     count_end+=1 if item[:lexema]==')'
   end
-  return t('syntax.expression.fail_bracket') if count_begin != count_end
+  return t('syntax.expression.fail_bracket')+"#{string.first[:num_line]}" if count_begin != count_end
   i=0
   l=string.length
   while i<l do
@@ -166,6 +168,7 @@ def parser_expression(string)
     end
       i+=1
   end
+  t('syntax.expression.success')
 end
 
 
@@ -214,11 +217,12 @@ def parser_expression_for(string)
   return t('syntax.for.fail_brecket')+"#{string.first[:num_line]}" if string.last[:lexema]!='end'
   return t('syntax.for.fail_todo')+"#{string.first[:num_line]}" if string[1][:lexem_type]!='identificator'||string[2][:lexema]!='='||
   string[3][:lexem_type]!='integer'||string[4][:lexema]!='to'||string[5][:lexem_type]!='integer'||string[6][:lexema]!='do'
-  while i<l do
+  return t('syntax.for.fail_instruction')+"#{string.first[:num_line]}" if l==8
+  while i<l-1 do
     string_for.push(string[i])
     i+=1
   end
-  parser_assign(string_for)
+  parser_assign(string_for) if string_for!=nil
 end
 ####################### RPN ##################
   def poliz(string)
@@ -276,16 +280,14 @@ end
       rpn.push(stack.last)
       stack.pop
     end
-    rpn.each do |item|
-      item
-    end
+    return rpn
   end
   ######################## CALCULATING RPN ################################
   def calc_poliz(rpn)
     stack=Array.new
     rpn.each do |item|
       if item[:lexem_type]=="identificator"||item[:lexem_type]=="integer"||item[:lexem_type]=="real"
-        stack.push(item[:lexema].to_i)
+        stack.push(item[:lexema].to_f)
       elsif item[:lexema]=="+"
         right_operand=stack.pop
         left_operand=stack.pop
@@ -296,8 +298,9 @@ end
         stack.push(right_operand*left_operand)
       elsif item[:lexema]=="/"
         right_operand=stack.pop
-        leftt_operand=stack.pop
-        stack.push(left_operand/right_operand.to_f)
+        left_operand=stack.pop
+        return t('syntax.assign.fail_0')+"#{item[:num_line]}" if right_operand==0
+        stack.push(left_operand/right_operand )
       elsif item[:lexema]=="-"
         right_operand=stack.pop
         left_operand=stack.pop
@@ -306,7 +309,7 @@ end
         right_operand=stack.pop
         left_operand=stack.pop
         stack.push(left_operand**right_operand)
-    else return t('poliz.fail')
+      else return t('poliz.fail')
       end
     end
     return stack.pop

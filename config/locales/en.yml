@@ -19,7 +19,8 @@ en:
     assign:
       success: "Assigning is correct"
       fail_expression: "Error. Assigning should exist."
-      fail: "Error. Before assigning should be identificator. Check line:"
+      fail_0: "Error. Devide by zero forbidden. Check line: "
+      fail: "Error. Before assigning should be identificator and after - expression. Check line:"
     if:
       success: "if-goto construction is correct."
       fail_expression: "Error. After \"if\" should be expression, not keyword. Check line:"
@@ -30,11 +31,12 @@ en:
       success: "for-to-do construction is correct."
       fail_brecket: "Error. for-to-do construction should start with \"for\" and finish with \"end\". Check line: "
       fail_todo: "Error. Wrong \"for\" syntax. Check to_do in line: "
+      fail_instruction: "Error. Wrong \"for\" syntax. Body should have an instruction. Check line: "
     expression:
       success: "Assign is correct."
       fail: "Error. Check expression, line: "
       fail_sign: "Error. Expression should not have log signs. Check line: "
-      fail_bracket: "Error. Check bracket's amount. "
+      fail_bracket: "Error. Check bracket's amount, line: "
     end: "Syntax analyze is finished"
   button:
     edit: "Edit"
