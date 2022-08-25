@@ -110,7 +110,24 @@ def parser_name(lexan)
     t('syntax.start.success')+t('syntax.name.fail')
   end
 end
-
+def table_ident_create(lexan)
+  table_identificators=Array.new;
+  string= Array.new
+  lexan=lexan.drop(1)
+  lexan.pop
+  i=1
+  l=lexan.last[:num_line]
+  while i<l do
+    string=lexan.select {|v| v[:num_line]==i}
+    string=string.drop(1) if string.first[:lexema]==';'
+    if string.first[:lexem_type]=='identificator' && string.length==3 && (string.last[:lexem_type]=='integer'||string.last[:lexem_type]=='real')
+      string.first[:assign_value]=string.last[:lexema]
+      table_identificators.push(string.first)
+    end
+    i+=1
+  end
+  return table_identificators
+end
 def parse_statement_list(lexan)
   string= Array.new
   lexan=lexan.drop(1)
@@ -123,7 +140,7 @@ def parse_statement_list(lexan)
     if string.first[:lexem_type]=='identificator'
       result = parser_assign(string)
       poliz(string)
-      calc_poliz(string.drop(1))
+      calc_poliz(string.drop(1), lexan)
     elsif string.first[:lexema]=='if'
       result = parser_if(string)
     elsif string.first[:lexema]=='for'
@@ -138,6 +155,7 @@ end
 
 def parser_assign(string)
   string=string.drop(1)
+
   if string.first!=nil && string.first[:lexem_type]=='assign' && (string[1][:lexema]=='(' || string[1][:lexem_type]=='integer'||string[1][:lexem_type]=='real'||string[1][:lexem_type]=='identificator')
     return parser_expression(string)
   else
@@ -283,32 +301,57 @@ end
     return rpn
   end
   ######################## CALCULATING RPN ################################
-  def calc_poliz(rpn)
+  def calc_poliz(rpn,lexan)
+    tabel_identificators=table_ident_create(lexan)
     stack=Array.new
     rpn.each do |item|
-      if item[:lexem_type]=="identificator"||item[:lexem_type]=="integer"||item[:lexem_type]=="real"
+      if item[:lexem_type]=="identificator"
+        tabel_identificators.each do |ident_value|
+          stack.push(ident_value[:assign_value].to_f)if ident_value[:lexema]==item[:lexema]
+        end
+      elsif item[:lexem_type]=="integer"||item[:lexem_type]=="real"
         stack.push(item[:lexema].to_f)
       elsif item[:lexema]=="+"
         right_operand=stack.pop
         left_operand=stack.pop
-        stack.push(right_operand+left_operand)
+        if right_operand!=nil && left_operand !=nil
+          stack.push(right_operand+left_operand)
+        else
+          return t('poliz.fail_identificator')+"#{item[:num_line]}"
+        end
       elsif item[:lexema]=="*"
         right_operand=stack.pop
         left_operand=stack.pop
-        stack.push(right_operand*left_operand)
+        if right_operand!=nil && left_operand !=nil
+          stack.push(right_operand*left_operand)
+        else
+          return t('poliz.fail_identificator')+"#{item[:num_line]}"
+        end
       elsif item[:lexema]=="/"
         right_operand=stack.pop
         left_operand=stack.pop
         return t('syntax.assign.fail_0')+"#{item[:num_line]}" if right_operand==0
-        stack.push(left_operand/right_operand )
+        if right_operand!=nil && left_operand !=nil
+          stack.push(left_operand/right_operand )
+        else
+          return t('poliz.fail_identificator')+"#{item[:num_line]}"
+        end
       elsif item[:lexema]=="-"
         right_operand=stack.pop
         left_operand=stack.pop
-        stack.push(left_operand-right_operand)
+        if right_operand!=nil && left_operand !=nil
+          stack.push(left_operand-right_operand)
+        else
+          return t('poliz.fail_identificator')+"#{item[:num_line]}"
+        end
       elsif item[:lexema]=="^"
         right_operand=stack.pop
         left_operand=stack.pop
-        stack.push(left_operand**right_operand)
+        if right_operand!=nil && left_operand !=nil
+          stack.push(left_operand**right_operand)
+        else
+          return t('poliz.fail_identificator')+"#{item[:num_line]}"
+        end
       else return t('poliz.fail')
       end
     end

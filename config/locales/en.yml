@@ -43,6 +43,7 @@ en:
     destroy: "Destroy"
   poliz:
     fail: "Error. Check reverse polish notation."
+    fail_identificator: "Error. Could not find identificator. Check line: "
   error:
     102: 'Error 102: invalid combination of symbols'
     103: 'Error 103: invalid symbol'
