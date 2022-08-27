@@ -7,18 +7,13 @@
       <div>
         <h1><%= t('form.parser') %></h1>
         <div>
-          <%= parser(lexan)%><br>
+          <%= syntan=parser(lexan)%><br>
         </div>
-        <%string=lexan.drop(3)%>
-        <%if string.first[:lexem_type]=='assign'%>
-          <h1><%= t('form.rpn') %></h1>
-          <%string=lexan.select {|v| v[:num_line]==1}%>
-          <% rpn=poliz(string.drop(1))%>
-          <% rpn.each do |operand|%>
-            <%= operand[:lexema]%>
+        <h1><%= t('form.identificator') %></h1>
+        <% if syntan=="Syntax analyze is finished. Program is on proccess..."%>
+          <% parse_statement(lexan).each do |identificator| %>
+            <%= identificator[:lexema]%> = <%=identificator[:assign_value]%><br>
           <%end%>
-          <h3><%= t('form.result') %></h3>
-          <%= calc_poliz(rpn, lexan)%><br>
         <%end%>
       </div>
     </div>
@@ -33,7 +28,6 @@
          <th>Program line</th>
          <th>lexem type</th>
          <th>lexema</th>
-         <th>index in proper table</th>
        </tr>
         <% lexan.each do |item| %>
        <tr>
@@ -41,7 +35,6 @@
             <td><%=item[:num_line]%></td>
             <td><%=item[:lexem_type]%></td>
             <td><%=item[:lexema]%></td>
-            <td><%=item[:idx]%></td>
       </tr>
       <%end %>
       </table>

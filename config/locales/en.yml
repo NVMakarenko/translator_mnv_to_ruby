@@ -2,7 +2,7 @@ en:
   form:
     todo: "Write a program on MNV language"
     lexan: "Lexical analyze results"
-    rpn: "Reverse Polish Notation"
+    identificator: "Table of identificators:  "
     result: "Resuluts of the calculating"
     parser: "Syntax analyze results"
   syntax:
@@ -14,7 +14,7 @@ en:
       success: "\nThe name of program is"
       fail: "\nError. Program should have a name"
     statemen_list:
-      success: " Syntax analyze is finished."
+      success: "Syntax analyze is finished. Program is on proccess..."
       fail: "String in statement list should start with keyword \"for\", \"if\" or identification. Check line: "
     assign:
       success: "Assigning is correct"
@@ -29,7 +29,7 @@ en:
       fail: "Error. Wrong \"if\" syntax. Check line: "
     for:
       success: "for-to-do construction is correct."
-      fail_brecket: "Error. for-to-do construction should start with \"for\" and finish with \"end\". Check line: "
+      fail_brecket: "Error. Wrong \"for\" syntax. Check line: "
       fail_todo: "Error. Wrong \"for\" syntax. Check to_do in line: "
       fail_instruction: "Error. Wrong \"for\" syntax. Body should have an instruction. Check line: "
     expression:
