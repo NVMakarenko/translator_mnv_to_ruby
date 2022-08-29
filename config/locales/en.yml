@@ -30,7 +30,7 @@ en:
     for:
       success: "for-to-do construction is correct."
       fail_brecket: "Error. Wrong \"for\" syntax. Check line: "
-      fail_todo: "Error. Wrong \"for\" syntax. Check to_do in line: "
+      fail_todo: "Error. Wrong \"for\" syntax. Check from_to diapazon in line: "
       fail_instruction: "Error. Wrong \"for\" syntax. Body should have an instruction. Check line: "
     expression:
       success: "Assign is correct."
