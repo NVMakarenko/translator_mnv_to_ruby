@@ -52,7 +52,7 @@ module LexicalAnalyzersHelper
 
   def get_lexem_type(lexem)
     tokenHash = {
-      'keyword' => ['program', 'end', 'for', 'to', 'do', 'if', 'goto', 'endfor'],
+      'keyword' => ['program', 'end', 'for', 'to', 'do', 'if', 'goto', 'endfor', 'label'],
       'add_op' => ['+','-'],
       'math_op' => ['*','/','^'],
       "log_op" => ['<','<=','>','>=','~', '='],
@@ -120,14 +120,16 @@ def parse_statement_list(lexan)
   l=lexan.last[:num_line]
   count_for=0
   count_endfor=0
+  count_label=0
+  table_labels=table_label_create(lexan)
   while i<l do
     string=lexan.select {|v| v[:num_line]==i}
     string=string.drop(1) if string.first[:lexema]==';'
-    if string.first[:lexem_type]=='identificator'
+    if string.first[:lexem_type]=='identificator' && string.length>1
       result = parser_assign(string)
       return t('syntax.assign.fail')+"#{string.first[:num_line]}" if result==false
     elsif string.first[:lexema]=='if'
-      result = parser_if(string)
+      result = parser_if(string, table_labels)
       return t('syntax.if.fail_label')+"#{string.last[:num_line]}" if result==false
     elsif string.first[:lexema]=='for'
       count_for +=1
@@ -135,6 +137,8 @@ def parse_statement_list(lexan)
       return t('syntax.for.fail_brecket')+"#{string.first[:num_line]}" if result==false
     elsif string.first[:lexema]=='endfor'
       count_endfor+=1
+    elsif string.first[:lexem_type]=='identificator' && string.length==1
+      count_label
     else
       return t('syntax.statemen_list.fail')+"#{i}"
     end
@@ -157,30 +161,36 @@ def parser_assign(string)
   return t('syntax.statemen_list.success')
 end
 
-def parser_if(string)
+def parser_if(string, table_labels)
   l=string.length
-  return false unless string.last[:lexem_type]=='integer' && string[l-2][:lexema]=='goto'
-  return t('syntax.statemen_list.success')
+  expression_if=get_expression_if(string.drop(1))
+  count_log=0
+  return false unless string.last[:lexem_type]=='identificator' && string[l-2][:lexema]=='goto'
+  return false if expression_if.length<3
+  return false unless expression_if.first[:lexema]!='('||expression_if.first[:lexem_type]!='integer'||expression_if.first[:lexem_type]!='real'||expression_if.first[:lexem_type]!='identificator'
+  return false unless expression_if.last[:lexema]!=')'||expression_if.last[:lexem_type]!='integer'||expression_if.last[:lexem_type]!='real'||expression_if.last[:lexem_type]!='identificator'
+  expression_if.each do |operand|
+    count_log+=1 if operand[:lexem_type]=='log_op'
+    return false if operand[:lexem_type]=='keyword'||operand[:lexem_type]=='new_line'
+  end
+  return false if count_log!=1
+  table_labels.each do |label|
+    return t('syntax.statemen_list.success') if label[:lexema]==string.last[:lexema]
+  end
+  return false
 end
 
 def parser_for(string)
-  i=7
   l=string.length
-  string_for=Array.new
   return false if string[1][:lexem_type]!='identificator'||string[2][:lexema]!='='||
   string[3][:lexem_type]!='integer'||string[4][:lexema]!='to'||string[5][:lexem_type]!='integer'||string[6][:lexema]!='do'
-  return t('syntax.for.fail_instruction')+"#{string.first[:num_line]}" if l==8
-  while i<l-1 do
-    string_for.push(string[i])
-    i+=1
-  end
-  parser_assign(string_for) if string_for!=nil
-
+  return t('syntax.for.fail_instruction')+"#{string.first[:num_line]}" if l>7
   return t('syntax.statemen_list.success')
-
 end
+
 def parse_statement(lexan)
   table_identification=table_ident_create(lexan)
+  table_labels=table_label_create(lexan)
   lexan=lexan.drop(2)
   lexan.pop(1)
   i=1
@@ -192,6 +202,13 @@ def parse_statement(lexan)
       rpn=parser_expression(string.drop(2))
       string.first[:assign_value]=calc_poliz(rpn,table_identification)
       table_identification.push(string.first)
+    elsif string.first[:lexema]=='if'
+      result = get_if(string, table_identification)
+      if result==true
+        table_labels.each do |label|
+          i=label[:num_line] if label[:lexema]==string.last[:lexema]
+        end
+      end
     end
     i+=1
   end
@@ -214,7 +231,19 @@ def table_ident_create(lexan)
   end
   return table_identificators
 end
-
+def table_label_create(lexan)
+  i=1
+  l=lexan.last[:num_line]
+  table_labels=Array.new
+  while i<l do
+    string=lexan.select {|v| v[:num_line]==i}
+    string=string.drop(1) if string.first[:lexema]==';'
+    table_labels.push(string) if string!=nil && string.first[:lexem_type]=='identificator' && string.length==1
+    i+=1
+  end
+  table_labels.flatten!
+  return table_labels
+end
 def parser_expression(string)
   result=Array.new
   string_term=Array.new
@@ -253,8 +282,9 @@ def parser_expression(string)
     i+=1
   end
   result.push(parser_term(string_term))
-  result.push(sign)
+  result.push(sign)if sign!=nil
   result.flatten!
+
   return result
 end
 
@@ -364,13 +394,44 @@ def calc_poliz(rpn,table_identificators)
   end
   return stack.pop
 end
-#
-# def parser_expression_if(lexema)
-#   return true if lexema[:lexem_type]=='identificator'
-#   return true if lexema[:lexem_type]=='log_op'
-#   return true if lexema[:lexem_type]=='boolean'
-#   return true if lexema[:lexem_type]=='integer'
-#   return true if lexema[:lexem_type]=='real'
-# end
-
+def get_if(string, table_identification)
+  expression_if=get_expression_if(string.drop(1))
+  rpn_left_operand=parser_expression(get_left_if_operand(expression_if))
+  left_operand=calc_poliz(rpn_left_operand, table_identification)
+  sign=expression_if.drop(get_left_if_operand(expression_if).length).first
+  rpn_right_operand=parser_expression(expression_if.drop(get_left_if_operand(expression_if).length+1))
+  right_operand=calc_poliz(rpn_right_operand, table_identification)
+  return calc_if(left_operand, right_operand, sign)
+end
+  def get_expression_if(string)
+    expression_if=Array.new
+    string.each do |operand|
+      break if operand[:lexema]=='goto'
+      expression_if.push(operand)
+    end
+    return expression_if
+  end
+  def get_left_if_operand(string)
+    left_operand=Array.new
+    string.each do |operand|
+      break if operand[:lexem_type]=='log_op'
+      left_operand.push(operand)
+    end
+    return left_operand
+  end
+  def calc_if(left_operand, right_operand, sign)
+    case sign[:lexema]
+    when ">"
+      result = left_operand>right_operand
+    when "<"
+      result = left_operand>right_operand
+    when ">="
+      result = left_operand>=right_operand
+    when "<="
+      result = left_operand<=right_operand
+    when "="
+      result = left_operand==right_operand
+    end
+  return result
+  end
 end

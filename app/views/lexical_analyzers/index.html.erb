@@ -11,9 +11,7 @@
         </div>
         <h1><%= t('form.identificator') %></h1>
         <% if syntan=="Syntax analyze is finished. Program is on proccess..."%>
-          <% parse_statement(lexan).each do |identificator| %>
-            <%= identificator[:lexema]%> = <%=identificator[:assign_value]%><br>
-          <%end%>
+          <%= parse_statement(lexan)%>
         <%end%>
       </div>
     </div>

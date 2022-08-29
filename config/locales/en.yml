@@ -24,7 +24,7 @@ en:
     if:
       success: "if-goto construction is correct."
       fail_expression: "Error. After \"if\" should be expression, not keyword. Check line:"
-      fail_label: "Error. After goto should be label with \"goto\" and \"integer\". Check line: "
+      fail_label: "Error. After goto should be label with \"goto\" and proper \"identificator\". Check line: "
       fail_start: "Error. if-goto construction should start with \"if\". Check line: "
       fail: "Error. Wrong \"if\" syntax. Check line: "
     for:
